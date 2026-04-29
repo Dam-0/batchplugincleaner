@@ -1,3 +1,8 @@
+# by Damo
+# use at your own risk.
+# Licensed under GPL3
+
+# Original attribution
 # by bluebuiy
 # for mo 2.5.0+
 # use at your own risk.
@@ -125,7 +130,6 @@ class PluginSelectWindow(QDialog):
         selectAllButton = QPushButton("Select All")
         selectNoneButton = QPushButton("Select None")
         startButton = QPushButton("Clean")
-        #cancelButton = QPushButton("Cancel")
 
         self.__layout.addWidget(self.__listView)
 
@@ -138,14 +142,12 @@ class PluginSelectWindow(QDialog):
 
 
         self.__layout.addWidget(buttonHolder)
-        #self.__layout.addWidget(cancelButton)
 
         self.setLayout(self.__layout)
 
         selectAllButton.clicked.connect(self.__selectAll)
         selectNoneButton.clicked.connect(self.__selectNone)
         startButton.clicked.connect(self.__startPressed)
-        #cancelButton.clicked.connect(self.__cancel)
 
     def addPlugin(self, pluginName, priority, defaultState):
         self.__listModel.addPlugin(pluginName, priority, defaultState)
@@ -156,7 +158,6 @@ class PluginSelectWindow(QDialog):
 
     def sortPlugins(self, key):
         self.__listModel.sortData(key)
-        #self.__listModel.dataChanged.emit(0, len(__listModel.__data) - 1, Qt.ItemDataRole.EditRole)
 
     def __startPressed(self):
         self.startAction.emit()
@@ -184,7 +185,7 @@ class CleanerPlugin(mobase.IPluginTool):
         return "Batch Plugin Cleaner"
         
     def author(self):
-        return "bluebuiy"
+        return "'bluebuiy' modified by Damo"
 
     def displayName(self):
         return "Clean Plugins"
@@ -208,9 +209,6 @@ class CleanerPlugin(mobase.IPluginTool):
             mobase.PluginSetting("clean_beth", "Clean base game plugins", False),
             mobase.PluginSetting("clean_else", "Clean mod plugins", True),
             mobase.PluginSetting("sort_by_priority", "If plugins should be ordered by priority instead of alphabetically", True),
-            mobase.PluginSetting("explicit_data_path", "If the data directory should be explicitly provided.  May need to be enabled if you get errors from xEdit.", False),
-            mobase.PluginSetting("explicit_ini_path", "If the ini path should be explicitly provided.  May need to be enabled if you get errors from xEdit.", False),
-            mobase.PluginSetting("explicit_game_arg", "Adds -<game> as an argument to xEdit. Options: sse tes5vr fo4vr test4 tes5 enderal fo3 fnv fo4 fo76", ""),
             mobase.PluginSetting("exe_name_xedit", "Invoke xEdit as xEdit, not SSEEdit. You probably need explicit_game_arg too.", False)
         ]
 
@@ -272,17 +270,37 @@ class CleanerPlugin(mobase.IPluginTool):
             if self.__canceled:
                 self.__canceled = False
                 break
-            args = ["-QuickAutoClean", "-autoexit", "-autoload", f"\"{plugin}\""]
 
-            if self.__organizer.pluginSetting(self.name(), "explicit_data_path"):
-                args.append(f"-D:\"{self.__organizer.managedGame().dataDirectory().absolutePath()}\"")
+            profile = self.__organizer.profile()
 
-            if self.__organizer.pluginSetting(self.name(), "explicit_ini_path"):
-                args.append(f"-I:\"{self.__organizer.managedGame().documentsDirectory().path()}/{self.__organizer.managedGame().iniFiles()[0]}\"")
+            profile_path = profile.absolutePath()
+            
+            plugin_path = profile.absoluteIniFilePath("plugins.txt")
+            ini_path = profile.absoluteIniFilePath("skyrim.ini")
+            data_path = self.__organizer.managedGame().dataDirectory().absolutePath()
+            mod_path = self.__organizer.modsPath()
 
-            gameArg = self.__organizer.pluginSetting(self.name(), "explicit_game_arg")
-            if len(gameArg) > 0:
-                args.append(f"-{gameArg}")
+            args = [
+                f'-m:"{profile_path}"',
+                f'-p:"{plugin_path}"',
+                f'-d:"{data_path}"',
+                f'-i:"{ini_path}"',
+                "-quickautoclean",
+                "-autoload",
+                f'"{plugin}"'
+            ]
+
+            if profile_path != "":
+                QMessageBox.critical(self.__parentWidget, "Error", "Invalid MO2 profile path ({profile_path})")
+            return
+
+            if data_path != "":
+                QMessageBox.critical(self.__parentWidget, "Error", "Invalid Data path ({data_path})")
+            return
+
+            if plugin_path != "":
+                QMessageBox.critical(self.__parentWidget, "Error", "plugins.txt not found ({plugin_path})")
+            return
 
             exe = self.__organizer.startApplication(xEditPath, args)
             
@@ -309,4 +327,3 @@ class CleanerPlugin(mobase.IPluginTool):
 
 def createPlugin() -> mobase.IPluginTool:
     return CleanerPlugin()
-    
