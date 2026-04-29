@@ -287,6 +287,7 @@ class CleanerPlugin(mobase.IPluginTool):
                 f'-i:"{ini_path}"',
                 "-quickautoclean",
                 "-autoload",
+                "-autoexit",
                 f'"{plugin}"'
             ]
 
