@@ -291,18 +291,6 @@ class CleanerPlugin(mobase.IPluginTool):
                 f'"{plugin}"'
             ]
 
-            if profile_path != "":
-                QMessageBox.critical(self.__parentWidget, "Error", "Invalid MO2 profile path ({profile_path})")
-            return
-
-            if data_path != "":
-                QMessageBox.critical(self.__parentWidget, "Error", "Invalid Data path ({data_path})")
-            return
-
-            if plugin_path != "":
-                QMessageBox.critical(self.__parentWidget, "Error", "plugins.txt not found ({plugin_path})")
-            return
-
             exe = self.__organizer.startApplication(xEditPath, args)
             
             if exe != 0:
